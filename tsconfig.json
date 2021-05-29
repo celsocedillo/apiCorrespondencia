@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "target": "es2017",
+    "module": "commonjs",
+    "lib": ["ES5", "ES6", "DOM"],                             /* Specify library files to be included in the compilation. */    
+    "outDir": "./dist",                        /* Redirect output structure to the directory. */
+    "rootDir": "./src",                       /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
+    "strict": true,                           /* Enable all strict type-checking options. */    
+    "strictPropertyInitialization": false,  /* Enable strict checking of property initialization in classes. */    
+    "moduleResolution": "node",
+    "esModuleInterop": true,                  /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */    
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "skipLibCheck": true,                     /* Skip type checking of declaration files. */
+    "forceConsistentCasingInFileNames": true,  /* Disallow inconsistently-cased references to the same file. */
+    //"sourceMap": true
+  }
+}

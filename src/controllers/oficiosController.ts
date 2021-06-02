@@ -13,7 +13,7 @@ let msgAsunto = "App Contratos, error en contratoController";
 
 export const getOficiosSumilla = async (req : Request, res: Response):Promise<Response> => {
     try {
-        console.log("sumilla");
+        // console.log("sumilla");
         const resultado= await oficiosService.getOficiosSumilla(parseInt(req.params.anio));
         return res.status(201).json({data: resultado});
     } catch (error) {

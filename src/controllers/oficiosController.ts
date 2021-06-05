@@ -7,7 +7,7 @@ import config from '../config.json';
 
 const oficiosService = new OficiosService();
 const mail = require(`${config.utilsFolder}/sendEmail`);
-let msgAsunto = "App Contratos, error en contratoController";
+let msgAsunto = "App Oficios, error en oficiosController";
 
 
 
@@ -19,6 +19,17 @@ export const getOficiosSumilla = async (req : Request, res: Response):Promise<Re
     } catch (error) {
         logger.error(error.stack);
         mail.enviarMail(error.stack, `${msgAsunto} - [getOficiosSumilla]`);        
+        return res.status(501).send({error:error.stack});       
+    }
+}
+
+export const getUltimosOficios = async (req : Request, res: Response):Promise<Response> => {
+    try {
+        const resultado= await oficiosService.getUltimosOficios();
+        return res.status(201).json({data: resultado});
+    } catch (error) {
+        logger.error(error.stack);
+        mail.enviarMail(error.stack, `${msgAsunto} - [getUltimosOficios]`);        
         return res.status(501).send({error:error.stack});       
     }
 }

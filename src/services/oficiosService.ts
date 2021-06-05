@@ -29,4 +29,29 @@ export class OficiosService{
             throw new Error(err);
         }
     }
+
+    async getUltimosOficios(){
+        try{
+            let query = `select c.id_registro "id", fecha_ingreso "fechaIngreso", id_usuario "usuario", dpto "dpto", tip_doc "tipoDocumento", 
+                        c.registro_dpto "registroDpto", tip_oficio "tipoOficio", anio "anio", digitos "digitos",
+                        d.id_dpto_origen "idDptoOrigen", d.id_usuario_origen "idUsuarioOrigen", d.usuario_origen "usuarioOrigen", 
+                        d.id_usuario_destino "idUsuarioDestino", d.usuario_destino "usuarioDestino", d.id_dpto_destino "idDptoDestino", 
+                        d.asunto "asunto", 
+                        (select count(*) from cr_registros_detalle s 
+                        where s.id_registro = c.id_registro and s.id_sec_registro2 is not null and s.id_registro2 is not null) "sumillas"
+                        from erco.cr_registros_cabecera c
+                        left join erco.cr_registros_detalle d on d.id_registro = c.id_registro 
+                        where 
+                        fecha_ingreso between (sysdate -15) and sysdate
+                        and dpto = 11
+                        and d.id_sec_registro2 is null
+                        and d.id_registro2 is null
+                        order by fecha_ingreso DESC, c.registro_dpto DESC`
+            const result = await getManager().query(query);
+           return result;
+        }catch(err){
+            throw new Error(err);
+        }
+    }
+
 }

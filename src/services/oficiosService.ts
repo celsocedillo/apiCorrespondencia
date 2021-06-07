@@ -11,6 +11,7 @@ export class OficiosService{
     
     async getOficiosSumilla(panio: number){
         try{
+            console.log("base");
             let query = `select id_sec_registro "id", tip_oficio "tipoOficio", digitos "digitos", anio "anio", fecha_ingreso "fechaIngreso", 
             cabe_usuario_ingresa "usuarioIngresa", cabe_tipo_documento "tipoDocumento", tipo_registro "tipoRegistro",
             registro_dpto "registroDepartamento", id_usuario_origen "idUsuarioOrigen", usuario_origen "usuarioOrigen",
@@ -34,7 +35,7 @@ export class OficiosService{
         try{
             let query = `select c.id_registro "id", fecha_ingreso "fechaIngreso", id_usuario "usuario", dpto "dpto", tip_doc "tipoDocumento", 
                         c.registro_dpto "registroDpto", tip_oficio "tipoOficio", anio "anio", digitos "digitos",
-                        d.id_dpto_origen "idDptoOrigen", d.id_usuario_origen "idUsuarioOrigen", d.usuario_origen "usuarioOrigen", 
+                        d.id_dpto_origen "idDptoOrigen",d.dpto_origen "dptoOrigen", d.id_usuario_origen "idUsuarioOrigen", d.usuario_origen "usuarioOrigen", 
                         d.id_usuario_destino "idUsuarioDestino", d.usuario_destino "usuarioDestino", d.id_dpto_destino "idDptoDestino", 
                         d.asunto "asunto", 
                         (select count(*) from cr_registros_detalle s 
@@ -51,6 +52,33 @@ export class OficiosService{
            return result;
         }catch(err){
             throw new Error(err);
+        }
+    }
+
+    async getOficio(pid: number){
+        try {
+            let query = `select c.id_registro "id", fecha_ingreso "fechaIngreso", id_usuario "usuario", dpto "dpto", tip_doc "tipoDocumento", 
+                            c.registro_dpto "registroDpto", tip_oficio "tipoOficio", anio "anio", digitos "digitos",
+                            d.id_sec_registro "idSecRegistro", d.id_dpto_origen "idDptoOrigen", d.dpto_origen "dptoOrigen",d.id_usuario_origen "idUsuarioOrigen", 
+                            d.usuario_origen "usuarioOrigen", d.id_usuario_destino "idUsuarioDestino", d.usuario_destino "usuarioDestino", 
+                            d.id_dpto_destino "idDptoDestino", d.asunto "asunto", s.id_sec_registro "sumiIdSecRegistro", s.tipo "sumillado", 
+                            s.id_usuario_destino "sumiIdUsuarioDestino", s.usuario_destino "sumiUsuarioDestino", s.dpto_destino "sumiDptoDestino",
+                            s.estado_usuarios "sumiEstadoUsuarios", s.registro_dpto "sumiRegistroDpto", s.fecha_envio "fechaSumilla",
+                            s.fecha_vencimiento "sumiFechaVencimiento", s.sumilla "sumilla", s.registro_dpto "registroContesta", s.contestacion "contestacion",
+                            s.id_dpto_destino "sumiIdDpto"
+                            from erco.cr_registros_cabecera c
+                            left join erco.cr_registros_detalle d on d.id_registro = c.id_registro 
+                            left outer join cr_registros_detalle s on s.id_registro = c.id_registro and
+                            d.id_sec_registro = s.id_sec_registro2
+                            where 
+                            c.id_registro = ${pid}
+                            and d.id_sec_registro2 is null
+                            and d.id_registro2 is null
+                            order by fecha_ingreso DESC, c.registro_dpto DESC`
+            const result = await getManager().query(query);
+             return result
+        } catch (error) {
+            throw new Error(error);
         }
     }
 

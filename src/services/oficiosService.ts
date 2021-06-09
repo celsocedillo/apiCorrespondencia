@@ -65,6 +65,50 @@ export class OficiosService{
                             s.id_usuario_destino "sumiIdUsuarioDestino", s.usuario_destino "sumiUsuarioDestino", s.dpto_destino "sumiDptoDestino",
                             s.estado_usuarios "sumiEstadoUsuarios", s.registro_dpto "sumiRegistroDpto", s.fecha_envio "fechaSumilla",
                             s.fecha_vencimiento "sumiFechaVencimiento", s.sumilla "sumilla", s.registro_dpto "registroContesta", s.contestacion "contestacion",
+                            s.id_dpto_destino "sumiIdDpto", nvl(dep.siglas,'?') "siglas"
+                            from erco.cr_registros_cabecera c
+                            left join erco.cr_registros_detalle d on d.id_registro = c.id_registro 
+                            left outer join cr_registros_detalle s on s.id_registro = c.id_registro and
+                            d.id_sec_registro = s.id_sec_registro2
+                            join cr_departamentos_n dep on s.id_dpto_destino = dep.id_departamento
+                            where 
+                            c.id_registro = ${pid}
+                            and d.id_sec_registro2 is null
+                            and d.id_registro2 is null
+                            order by fecha_ingreso DESC, c.registro_dpto DESC`
+            const result = await getManager().query(query);     
+            //Armando un solo objeto    
+            let {sumiIdSecRegistro, sumillado, sumiIdUsuarioDestino, 
+                   sumiUsuarioDestino, sumiDptoDestino,sumiEstadoUsuarios, 
+                   sumiRegistroDpto,fechaSumilla, sumiFechaVencimiento, 
+                   sumilla, registroContesta, contestacion, sumiIdDpto, ...objeto} = result[0];
+            //Armando las sumillas como detalle del obejto                   
+            let sumillas :any = []
+            result.map( (x :any) => {
+                if (x.sumiIdSecRegistro) {
+                    const {id,fechaIngreso,usuario,dpto,tipoDocumento,registroDpto,tipoOficio,
+                           anio, digitos, idSecRegistro, idDptoOrigen, dptoOrigen,idUsuarioOrigen,
+                           usuarioOrigen,idUsuarioDestino, usuarioDestino,idDptoDestino,asunto, ...nuevo} = x
+                    sumillas.push(nuevo);
+                }
+            })
+            objeto = {...objeto, sumillas};
+            return objeto
+        } catch (error) {
+            throw new Error(error);
+        }
+    }
+
+    async getOficio2(pid: number){
+        try {
+            let query = `select c.id_registro "id", fecha_ingreso "fechaIngreso", id_usuario "usuario", dpto "dpto", tip_doc "tipoDocumento", 
+                            c.registro_dpto "registroDpto", tip_oficio "tipoOficio", anio "anio", digitos "digitos",
+                            d.id_sec_registro "idSecRegistro", d.id_dpto_origen "idDptoOrigen", d.dpto_origen "dptoOrigen",d.id_usuario_origen "idUsuarioOrigen", 
+                            d.usuario_origen "usuarioOrigen", d.id_usuario_destino "idUsuarioDestino", d.usuario_destino "usuarioDestino", 
+                            d.id_dpto_destino "idDptoDestino", d.asunto "asunto", s.id_sec_registro "sumiIdSecRegistro", s.tipo "sumillado", 
+                            s.id_usuario_destino "sumiIdUsuarioDestino", s.usuario_destino "sumiUsuarioDestino", s.dpto_destino "sumiDptoDestino",
+                            s.estado_usuarios "sumiEstadoUsuarios", s.registro_dpto "sumiRegistroDpto", s.fecha_envio "fechaSumilla",
+                            s.fecha_vencimiento "sumiFechaVencimiento", s.sumilla "sumilla", s.registro_dpto "registroContesta", s.contestacion "contestacion",
                             s.id_dpto_destino "sumiIdDpto"
                             from erco.cr_registros_cabecera c
                             left join erco.cr_registros_detalle d on d.id_registro = c.id_registro 
@@ -76,10 +120,13 @@ export class OficiosService{
                             and d.id_registro2 is null
                             order by fecha_ingreso DESC, c.registro_dpto DESC`
             const result = await getManager().query(query);
+            let { sumiIdSecRegistro, ...objeto  } = result;
+            console.log("objeto", objeto);
              return result
         } catch (error) {
             throw new Error(error);
         }
     }
+
 
 }

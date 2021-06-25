@@ -1,11 +1,12 @@
 import { Router  } from "express";
-import { getOficiosSumilla, getUltimosOficios, getOficio, getDepartamentos, 
+import { getSumillasEnEspera, getUltimosOficios, getOficio, getOficiosByFiltro,
+         getDepartamentos, 
          getEstadoUsuarios, insertSumilla, deleteSumilla, getFiltroUsuarios, 
          updateSumilla } from '../controllers/oficiosController';
 
 const router = Router();
-router.get('/oficios/:anio', getOficiosSumilla);
-router.get('/ultimoOficios/', getUltimosOficios);
+router.get('/oficiosEnEspera', getSumillasEnEspera);
+router.get('/oficiosByFiltro/:anio/:registro', getOficiosByFiltro);
 router.get('/oficio/:id', getOficio);
 router.get('/departamentos', getDepartamentos);
 router.get('/estadoUsuarios', getEstadoUsuarios);

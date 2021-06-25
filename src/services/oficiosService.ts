@@ -9,9 +9,8 @@ var oracledb = require("oracledb");
 
 export class OficiosService{
     
-    async getOficiosSumilla(panio: number){
+    async getSumillasEnEspera(){
         try{
-            console.log("base");
             let query = `select id_sec_registro "id", tip_oficio "tipoOficio", digitos "digitos", anio "anio", fecha_ingreso "fechaIngreso", 
             cabe_usuario_ingresa "usuarioIngresa", cabe_tipo_documento "tipoDocumento", tipo_registro "tipoRegistro",
             registro_dpto "registroDepartamento", id_usuario_origen "idUsuarioOrigen", usuario_origen "usuarioOrigen",
@@ -57,9 +56,55 @@ export class OficiosService{
         }
     }
 
+    async getOficiosByFiltro(panio:number, pregistro:number, pfiltro: any){
+        try {
+            let where = `where 
+                            dpto = 11
+                        and d.id_sec_registro2 is null
+                        and d.id_registro2 is null`            
+            if (pregistro !== 0 ){ 
+                let wh1 = ''; 
+                wh1 = ` c.registro_dpto = ${pregistro}`
+                panio && (wh1 = `${wh1} and c.anio = ${panio} `)
+                wh1 = ` (${wh1}) `
+                let wh2 = '';
+                wh2 = ` d.registro_dpto = ${pregistro}`
+                panio && (wh2 = `${wh2} and d.anio2 = ${panio} `)
+                wh2 = ` (${wh2}) `
+                where = ` ${where} and ${wh1} or ${wh2} `
+            }else{
+                pfiltro?.remitente && (where = `${where} and d.usuario_origen like '${pfiltro.remitente.toUpperCase()}' `)
+                if (pfiltro?.fechaDesde){
+                    if (pfiltro?.fechaHasta === null || pfiltro?.fechaHasta === undefined){
+                        pfiltro.fechaHasta = moment();
+                    }
+                    pfiltro?.fechaDesde && (where = `${where} and fecha_ingreso between trunc(to_date('${moment(pfiltro.fechaDesde).format('YYYY-MM-DD')}', 'YYYY-MM-DD'))
+                                            and trunc(to_date('${moment(pfiltro.fechaHasta).format('YYYY-MM-DD')}', 'YYYY-MM-DD')) `)
+                }
+                pfiltro?.asunto && (where = ` ${where} and d.asunto like '${pfiltro.asunto.toUpperCase()}' `)
+                pfiltro?.oficio && (where = ` ${where} and c.nro_documento like '${pfiltro.oficio.toUpperCase()}' `)
+            }
+            let query = `select c.id_registro "id", fecha_ingreso "fechaIngreso", id_usuario "usuario", dpto "dpto", tip_doc "tipoDocumento", 
+            c.registro_dpto "registroDpto", tip_oficio "tipoOficio", anio "anio", digitos "digitos",
+            d.id_dpto_origen "idDptoOrigen",d.dpto_origen "dptoOrigen", d.id_usuario_origen "idUsuarioOrigen", d.usuario_origen "usuarioOrigen", 
+            d.id_usuario_destino "idUsuarioDestino", d.usuario_destino "usuarioDestino", d.id_dpto_destino "idDptoDestino", 
+            d.asunto "asunto", 
+            (select count(*) from cr_registros_detalle s 
+            where s.id_registro = c.id_registro and s.id_sec_registro2 is not null and s.id_registro2 is not null and s.tipo='S') "sumillas",
+            (select count(*) from cr_registros_detalle s 
+            where s.id_registro = c.id_registro and s.id_sec_registro2 is not null and s.id_registro2 is not null and estado_usuarios = 'C') "contestacion"                        
+            from erco.cr_registros_cabecera c
+            left join erco.cr_registros_detalle d on d.id_registro = c.id_registro ${where}
+            order by fecha_ingreso DESC, c.registro_dpto DESC`
+            const result = await getManager().query(query);
+            return result;            
+        } catch (error) {
+            
+        }
+    }
+
     async getOficio(pid: number){
         try {
-
             let query = `select c.id_registro "id", fecha_ingreso "fechaIngreso", id_usuario "usuario", dpto "dpto", tip_doc "tipoDocumento", 
                             c.registro_dpto "registroDpto", tip_oficio "tipoOficio", anio "anio", digitos "digitos",
                             d.id_sec_registro "idSecRegistro", d.id_dpto_origen "idDptoOrigen", d.dpto_origen "dptoOrigen",d.id_usuario_origen "idUsuarioOrigen", 
@@ -82,7 +127,6 @@ export class OficiosService{
                             and d.id_registro2 is null
                             order by fecha_ingreso DESC, c.registro_dpto DESC, s.id_sec_registro asc`
             const result = await getManager().query(query);     
-            //console.log("resultado", result);
             //Armando un solo objeto    
             let {sumiIdSecRegistro, sumillado, sumiIdUsuarioDestino, 
                    sumiUsuarioDestino, sumiDptoDestino,sumiEstadoUsuarios, 
@@ -110,24 +154,6 @@ export class OficiosService{
                              and g.id_sec_registro2 = ${result[0].idSecRegistro} and g.tipo = 'G'                           
                             `
             const gerContesta = await getManager().query(querygerCon);                                 
-            //Armando las contesta gerente como detalle del obejto                   
-            // let gerContesta :any = []
-            // result.map( (x :any) => {
-            //     if (x.gerIdSecRegistro) {
-            //         const {id,fechaIngreso,usuario,dpto,tipoDocumento,registroDpto,tipoOficio,
-            //                anio, digitos, idSecRegistro, idDptoOrigen, dptoOrigen,idUsuarioOrigen,
-            //                usuarioOrigen,idUsuarioDestino, usuarioDestino,idDptoDestino,asunto,
-            //                anioContesta, diasEspera, digitosContesta, estadoSumilla, observacion,
-            //                oficioContesta, siglas, sumiFechaContesta,
-            //                sumiIdSecRegistro, sumillado, sumiIdUsuarioDestino, 
-            //                sumiUsuarioDestino, sumiDptoDestino,sumiEstadoUsuarios, 
-            //                sumiRegistroDpto,fechaSumilla, sumiFechaVencimiento, 
-            //                sumilla, registroContesta, contestacion, sumiIdDpto,                            
-            //                 ...nuevo} = x
-            //         gerContesta.push(nuevo);
-            //     }
-            // })
-
             objeto = {...objeto, sumillas, gerContesta};
             return objeto
         } catch (error) {
@@ -157,7 +183,6 @@ export class OficiosService{
                             order by fecha_ingreso DESC, c.registro_dpto DESC`
             const result = await getManager().query(query);
             let { sumiIdSecRegistro, ...objeto  } = result;
-            //console.log("objeto", objeto);
              return result
         } catch (error) {
             throw new Error(error);
@@ -219,16 +244,6 @@ export class OficiosService{
         try {
             let qrySecuencia = `select cr_s_registro_detalle.nextval from dual`
             const resSecuencia = await getManager().query(qrySecuencia);
-            // let query = `insert into cr_registros_detalle (
-            //     ID_REGISTRO, ID_SEC_REGISTRO, FECHA_ENVIO, ID_USUARIO_DESTINO, ID_DPTO_DESTINO, ESTADO_USUARIOS, USUARIO_DESTINO,
-            //     DPTO_DESTINO, SUMILLA, ID_REGISTRO2, ID_SEC_REGISTRO2, TIPO ) values (
-            //         ${precord.idRegistro},${resSecuencia[0].NEXTVAL},
-            //         to_date('${moment().format('YYYY-MM-DD')}','yyyy-mm-dd'),
-            //         '${precord.idUsuarioDestino}',${precord.idDptoDestino},
-            //         '${precord.estadoUsuarios}', '${precord.usuarioDestino}', 
-            //         '${precord.dptoDestino}', '${precord.sumilla}', 
-            //         ${precord.idRegistro2}, ${precord.idSecRegistro2}, 
-            //         '${precord.tipo}')`;
             let query = `insert into cr_registros_detalle (
                 ID_REGISTRO, ID_SEC_REGISTRO, FECHA_ENVIO, ID_USUARIO_DESTINO, ID_DPTO_DESTINO, ESTADO_USUARIOS, USUARIO_DESTINO,
                 DPTO_DESTINO, SUMILLA, ID_REGISTRO2, ID_SEC_REGISTRO2, TIPO ) values (
@@ -239,7 +254,6 @@ export class OficiosService{
                     '${precord.sumiDptoDestino}', '${precord.sumilla}', 
                     ${precord.idRegistro2}, ${precord.idSecRegistro2}, 
                     'S')`;
-            console.log('query', query);
             const inserta = await getManager().query(query);
             return resSecuencia[0].NEXTVAL;
         } catch (error) {
@@ -259,7 +273,7 @@ export class OficiosService{
 
     async updateSumilla(precord: any){
         try {
-            let query = `update cr_registros_detalle set sumilla='${precord.sumilla}', estado_usuarios='${precord.estadoUsuarios}' where id_sec_registro = ${precord.idSecRegistro} and tipo='S'`
+            let query = `update cr_registros_detalle set sumilla='${precord.sumilla}', estado_usuarios='${precord.sumiEstadoUsuarios}' where id_sec_registro = ${precord.sumiIdSecRegistro} and tipo='S'`
             const borrar = await getManager().query(query);
             return 'ok';
         } catch (error) {

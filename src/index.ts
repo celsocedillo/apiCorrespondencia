@@ -1,11 +1,33 @@
 import cors from "cors";
 import express from 'express'
 
-import { createConnection } from "typeorm";
+import { Connection, createConnection } from "typeorm";
 
 import oficiosRoute from "./routes/oficiosRoute";
 import config from "./config.json";
 import { TypeOrmLogger } from './utils/loggerorm'
+
+
+/* 
+Prueba de autenticacion del usuario
+*/
+
+// import oracledb from 'oracledb';
+// let conn:any;
+
+// config
+// const test = async ()  => {
+//     try {
+//         let config = {connectString: '192.198.12.200:1522/oradesa', user:'ercortt', password: 'erco'};
+//         conn =await oracledb.getConnection(config);
+//         console.log('Conectado');        
+//         conn.close();
+//     } catch (error) {
+//         console.log('error', error.errorNum);
+//     }
+// }
+
+// test();
 
 const connection = createConnection({
     type: config.type,

@@ -195,7 +195,8 @@ export class OficiosService{
                             from cr_departamentos_n dc
                             join rhh_direccion d on d.codigo = dc.direccion_id
                             join rhh_personal p on p.cargo = d.cargo and p.estado = 'A'
-                            where id_departamento is not null`
+                            where id_departamento is not null
+                            order by sigla`
             const result = await getManager().query(query);
             return result
         } catch (error) {

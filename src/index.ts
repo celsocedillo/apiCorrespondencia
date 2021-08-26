@@ -4,9 +4,10 @@ import express from 'express'
 import { Connection, createConnection } from "typeorm";
 
 import oficiosRoute from "./routes/oficiosRoute";
+import seguridadRoute from './routes/seguridadRoute'
 import config from "./config.json";
 import { TypeOrmLogger } from './utils/loggerorm'
-
+import { getConnection} from 'typeorm';
 
 /* 
 Prueba de autenticacion del usuario
@@ -29,19 +30,19 @@ Prueba de autenticacion del usuario
 
 // test();
 
-const connection = createConnection({
-    type: config.type,
-    host: config.host,
-    port: config.port,
-    username: config.username,
-    password: config.password,
-    sid: config.sid,
-    //entities: ["./dist/entities/**/*.js"],
-    entities: [`${config.entities}`],
-    synchronize: false,
-    logging: ["info", "error"],
-    logger: new TypeOrmLogger()
-});
+// const connection = createConnection({
+//     type: config.type,
+//     host: config.host,
+//     port: config.port,
+//     username: config.username,
+//     password: config.password,
+//     sid: config.sid,
+//     //entities: ["./dist/entities/**/*.js"],
+//     entities: [`${config.entities}`],
+//     synchronize: false,
+//     logging: ["info", "error"],
+//     logger: new TypeOrmLogger()
+// });
 
 
 const app = express();
@@ -49,6 +50,7 @@ app.use(cors());
 app.use(express.json());
 
 //app.use(cobroRoute);
+ app.use(seguridadRoute);
  app.use(oficiosRoute);
 
 //app.listen(config.puertoAPI);

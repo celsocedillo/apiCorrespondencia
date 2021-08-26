@@ -14,7 +14,19 @@ let msgAsunto = "App Oficios, error en oficiosController";
 
 export const getSumillasEnEspera = async (req : Request, res: Response):Promise<Response> => {
     try {
+        console.log('sumillas');
         const resultado= await oficiosService.getSumillasEnEspera();
+        return res.status(201).json({data: resultado});
+    } catch (error) {
+        logger.error(error.stack);
+        mail.enviarMail(error.stack, `${msgAsunto} - [getOficiosSumilla]`);        
+        return res.status(501).send({error:error.stack});       
+    }
+}
+
+export const getSumillasEnEsperaDireccion = async (req : Request, res: Response):Promise<Response> => {
+    try {
+        const resultado= await oficiosService.getSumillasEnEsperaDireccion(parseInt(req.params.direccionId));
         return res.status(201).json({data: resultado});
     } catch (error) {
         logger.error(error.stack);

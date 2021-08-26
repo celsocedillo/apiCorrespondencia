@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { getRepository,  getManager, In} from 'typeorm';
+import { getManager, getConnectionManager, getConnection} from 'typeorm';
 
 
 import config from "../config.json";
@@ -24,9 +24,39 @@ export class OficiosService{
             where sumillado = 'S' and sumi_estado_usuarios = 'S' 
             order by fecha_sumilla ASC`
             const result = await getManager().query(query);
+            
            return result;
         }catch(err){
             throw new Error(err);
+        }
+        finally{
+            getConnection().close();
+        }
+    }
+
+    async getSumillasEnEsperaDireccion(pdireccionId: number){
+        try{
+            let query = `select id_registro "idRegistro", id_sec_registro "id", tip_oficio "tipoOficio", digitos "digitos", anio "anio", fecha_ingreso "fechaIngreso", 
+            cabe_usuario_ingresa "usuarioIngresa", cabe_tipo_documento "tipoDocumento", tipo_registro "tipoRegistro",
+            sumi.registro_dpto "registroDepartamento", id_usuario_origen "idUsuarioOrigen", usuario_origen "usuarioOrigen",
+            dpto_origen "departamentoOrigen", id_usuario_destino "usuarioDestino", usuario_destino "usuarioDestino",
+            dpto_destino "departamentoDestino", asunto "asunto", sumillado "sumillado", 
+            sumi_id_usuario_destino "sumillaIdUsuarioDestino", sumi_usuario_destino "sumillaUsuarioDestino",
+            sumi_dpto_destino "sumillaDepartamentoDestino", sumi_estado_usuarios "sumillaEstado", sumilla "sumilla", sumi.siglas "siglas",
+            round(sysdate - fecha_sumilla) "diasEspera",
+            fecha_sumilla "fechaSumilla"
+            from erco.vw_oficio_sumilla sumi
+            join erco.cr_departamentos_n dep on dep.id_departamento = sumi_id_dpto
+            where sumillado = 'S' and sumi_estado_usuarios = 'S' 
+            and dep.direccion_id = ${pdireccionId}
+            order by fecha_sumilla ASC`
+            const result = await getManager().query(query);
+            
+           return result;
+        }catch(err){
+            throw new Error(err);
+        }finally{
+            getConnection().close();
         }
     }
 
@@ -101,6 +131,10 @@ export class OficiosService{
         } catch (error) {
             
         }
+        finally{
+            getConnection().close();
+        }
+
     }
 
     async getOficio(pid: number){
